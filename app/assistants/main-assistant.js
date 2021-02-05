@@ -32,9 +32,8 @@ MainAssistant.prototype.setup = function() {
     this.template = {
         itemTemplate: 'main/item-template',
         listTemplate: 'main/list-template',
-        swipeToDelete: false,
-        renderLimit: 25,
-        reorderable: false
+        swipeToDelete: true,
+        reorderable: true
     };
     this.controller.setupWidget("taskList", this.template, this.taskInfoModel);
     //Menu
@@ -70,6 +69,7 @@ MainAssistant.prototype.setup = function() {
         };
     this.controller.setupWidget(Mojo.Menu.commandMenu, this.cmdMenuAttributes, this.cmdMenuModel);
     /* Always on Event handlers */
+    Mojo.Event.listen(this.controller.get("taskList"), Mojo.Event.listReorder, this.handleListReorder.bind(this));
     Mojo.Event.listen(this.controller.get("taskList"), Mojo.Event.listTap, this.handleListClick.bind(this));
 
     //Check for updates
@@ -157,24 +157,58 @@ MainAssistant.prototype.handleCommand = function(event) {
                 Mojo.Additions.ShowDialogBox("Sweep", "Do you want to purge all completed tasks?");
                 break;
             case 'do-new':
-                Mojo.Additions.ShowDialogBox("Create New", "What's your new task?");
+                appModel.LastTaskSelected = { id: "new" };
+                this.showEditDialog();
                 break;
         }
     }
-};
+}
 
 MainAssistant.prototype.handleClick = function(event) {
     //this.disableUI();
 }
 
-MainAssistant.prototype.handleListClick = function(event) {
-    Mojo.Log.info("Item tapped: " + event.item.title + ", id: " + event.item.id);
-    Mojo.Log.info("Item details: " + JSON.stringify(event.item.data));
-    //appModel.LastPodcastSelected = event.item.data;
-    //var stageController = Mojo.Controller.stageController;
-    //stageController.swapScene({ transition: Mojo.Transition.crossFade, name: "detail" });
+MainAssistant.prototype.handleListReorder = function(event) {
+    Mojo.Log.info("Item drag end");
+    this.allowPopup = true;
+}
 
-    return false;
+MainAssistant.prototype.handleListClick = function(event) {
+    Mojo.Log.info("Item tapped: " + event.item.guid);
+    appModel.LastTaskSelected = event.item;
+
+    //Pop up Menu
+    var posTarget = "divCheck" + event.item.guid;
+    var completeLabel = "Uncomplete";
+    if (!event.item.completed)
+        completeLabel = "Complete";
+    this.controller.popupSubmenu({
+        onChoose: this.handlePopupChoose.bind(this, event.item),
+        placeNear: document.getElementById(posTarget),
+        items: [
+            { label: completeLabel, command: 'do-complete' },
+            { label: 'Edit', command: 'do-edit' },
+        ]
+    });
+    return true;
+}
+
+MainAssistant.prototype.handlePopupChoose = function(task, command) {
+    Mojo.Log.info("Perform: ", command, " on ", task.guid);
+
+    switch (command) {
+        case "do-complete":
+            var thisTaskList = this.controller.getWidgetSetup("taskList");
+            if (task.completed)
+                task.completed = false;
+            else
+                task.completed = true;
+            this.controller.modelChanged(thisTaskList.model);
+            break;
+        case "do-edit":
+            this.showEditDialog(task.guid);
+            break;
+    }
 }
 
 /* Get Task Stuff */
@@ -199,7 +233,8 @@ MainAssistant.prototype.fetchTasks = function() {
             }
         } else {
             Mojo.Log.error("No usable response from server while loading tasks: " + response);
-            Mojo.Additions.ShowDialogBox("Server Error", "The server did not answer with a usable response to the task list request. Check network connectivity and/or self-host settings.");
+            Mojo.Controller.errorDialog("The server did not answer with a usable response to the task list request. Check network connectivity and/or self-host settings.");
+            //Mojo.Additions.ShowDialogBox("Server Error", "The server did not answer with a usable response to the task list request. Check network connectivity and/or self-host settings.");
         }
 
         this.enableUI();
@@ -209,25 +244,25 @@ MainAssistant.prototype.fetchTasks = function() {
 MainAssistant.prototype.updateTaskList = function(notation, results) {
 
     Mojo.Log.info("Displaying notation: " + notation);
-    //Mojo.Log.info("HTML: " + $("spnNotation").innerHTML);
-    //$("spnNotation").innerHTML = notation;
-    //Mojo.Log.info("HTML: " + $("spnNotation").innerHTML);
-    var thisWidgetSetup = this.controller.getWidgetSetup("taskList");
-    thisWidgetSetup.model.items = []; //remove the previous list
+
+    var thisTaskList = this.controller.getWidgetSetup("taskList");
+    thisTaskList.model.items = []; //remove the previous list
     for (var i = 0; i < results.length; i++) {
 
-        var newItem = {
-            id: results[i].id,
-            title: results[i].title,
-            description: results[i].description,
-            data: results[i]
-        };
-        thisWidgetSetup.model.items.push(newItem);
+        /* var newItem = {
+             id: results[i].guid,
+             title: results[i].title,
+             notes: results[i].notes,
+             completed: results[i].completed,
+             data: results[i]
+         }; */
+
+        thisTaskList.model.items.push(results[i]);
     }
 
     Mojo.Log.info("Updating task list widget with " + results.length + " results!");
     $("showTaskList").style.display = "block";
-    this.controller.modelChanged(thisWidgetSetup.model);
+    this.controller.modelChanged(thisTaskList.model);
 }
 
 MainAssistant.prototype.disableUI = function(statusValue) {
@@ -265,6 +300,31 @@ MainAssistant.prototype.enableUI = function() {
     //this.controller.modelChanged(this.submitBtnModel);
 }
 
+/* Edit Task Dialog Stuff */
+MainAssistant.prototype.showEditDialog = function(taskId) {
+    var stageController = Mojo.Controller.getAppController().getActiveStageController();
+    if (stageController) {
+        this.controller = stageController.activeScene();
+        this.controller.showDialog({
+            template: 'edittask/edittask-scene',
+            assistant: new EditTaskAssistant(this, function(val) {
+                    Mojo.Log.error("got value from edit task dialog: " + JSON.stringify(val));
+                    this.handleEditDialogDone(val);
+                }.bind(this)) //since this will be a dialog, not a scene, it must be defined in sources.json without a 'scenes' member
+        });
+    }
+}
+
+MainAssistant.prototype.handleEditDialogDone = function(val) {
+    if (val) {
+        Mojo.Log.info("Updating tasks after successful edit!");
+        var thisTaskList = this.controller.getWidgetSetup("taskList");
+        this.controller.modelChanged(thisTaskList.model);
+    } else {
+        //User hit cancel
+    }
+}
+
 /* Login Stuff */
 MainAssistant.prototype.doLogInOut = function() {
     if (appModel.AppSettingsCurrent["ChessMove"] == "" && appModel.AppSettingsCurrent["Grandmaster"] == "") {
@@ -293,7 +353,7 @@ MainAssistant.prototype.showLogin = function() {
         this.controller.showDialog({
             template: 'login/login-scene',
             assistant: new LoginAssistant(this, function(val) {
-                    Mojo.Log.error("got value from dialog: " + val);
+                    Mojo.Log.info("got value from login dialog: " + val);
                     this.handleLoginDialogDone(val);
                 }.bind(this)) //since this will be a dialog, not a scene, it must be defined in sources.json without a 'scenes' member
         });

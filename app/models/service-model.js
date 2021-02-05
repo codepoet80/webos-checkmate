@@ -29,8 +29,28 @@ ServiceModel.prototype.buildURL = function(actionType) {
     return path;
 }
 
-//HTTP request to search podcasts
+//HTTP request to get tasks
 ServiceModel.prototype.GetTasks = function(notation, grandmaster, callback) {
+    this.retVal = "";
+    if (callback)
+        callback = callback.bind(this);
+
+    var theQuery = this.buildURL("read-notation") + "?move=" + notation;
+    Mojo.Log.info("Getting task list with query: " + theQuery);
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.open("GET", theQuery);
+    xmlhttp.setRequestHeader("grandmaster", grandmaster);
+    xmlhttp.send();
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+            if (callback)
+                callback(xmlhttp.responseText);
+        }
+    }.bind(this);
+}
+
+//HTTP request to search podcasts
+ServiceModel.prototype.UpdateTask = function(notation, grandmaster, taskId, taskData, callback) {
     this.retVal = "";
     if (callback)
         callback = callback.bind(this);

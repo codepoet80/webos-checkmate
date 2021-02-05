@@ -5,53 +5,13 @@
     background-size: 32px 32px;
 }
 
-.thumbnail {
-    height: 100px;
-    object-fit: cover;
-    border-radius: 5px;
-    margin-left: 5%;
-}
-
 .checkmark {
-    margin-top: 35px;
+    float: right;
+    visibility: hidden;
 }
 
 .checkmark.true {
     visibility: visible;
-}
-
-.checkmark.false {
-    visibility: hidden;
-}
-
-.video-title {
-    overflow-wrap: break-word;
-    word-wrap: break-word;
-}
-
-.search-input {
-    position: relative;
-    width: 90%;
-    padding-top: 10px;
-    margin-left: -5px;
-}
-
-.search-input input {
-    height: 31px;
-    border: 1px solid darkgray;
-    border-radius: 15px;
-    display: block;
-    width: 100%;
-    padding-left: 10px;
-    margin-left: 5%;
-    box-sizing: border-box
-}
-
-.search-input img {
-    position: absolute;
-    top: 15px;
-    right: 0px;
-    margin-right: -5%;
 }
 
 .explanation-text {
@@ -68,34 +28,4 @@
 
 .palm-row-wrapper.detail {
     padding: 3px;
-}
-
-#divPodcastTitle {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.label.detail {
-    float: left;
-    margin: 8px;
-    padding-top: 4px;
-    margin-bottom: 0px;
-}
-
-.value.detail {
-    padding: 8px;
-    margin-top: -1px;
-}
-
-.value.detail input {
-    margin-top: 5px;
-    margin-bottom: 8px;
-    width: 98%
-}
-
-.textfield {
-    margin-top: 5px;
-    margin-bottom: 8px;
-    width: 98%
 }

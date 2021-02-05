@@ -10,6 +10,10 @@
         "comment": "since this will be a dialog, not a scene, we do not include the 'scenes' member (or we get errors)"
     },
     {
+        "source": "app/assistants/edittask-assistant.js",
+        "comment": "since this will be a dialog, not a scene, we do not include the 'scenes' member (or we get errors)"
+    },
+    {
         "scenes": "preferences",
         "source": "app/assistants/preferences-assistant.js"
     },
