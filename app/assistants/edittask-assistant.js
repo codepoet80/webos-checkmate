@@ -81,7 +81,7 @@ EditTaskAssistant.prototype.handleValueChange = function(event) {
             this.taskTitle = event.value;
             break;
         case "TaskNotes":
-            this.taskNotes = event.value
+            this.taskNotes = event.value;
             break;
     }
 }
@@ -102,41 +102,30 @@ EditTaskAssistant.prototype.handleGoPress = function(event) {
 }
 
 EditTaskAssistant.prototype.handleUpdateResponse = function(response) {
-    /*Mojo.Log.info("login response was: " + response);
+    Mojo.Log.info("update response was: " + response);
     try {
         var responseObj = JSON.parse(response);
     } catch (ex) {
         Mojo.Log.error("Could not parse login response!");
     }
     if (responseObj && responseObj.notation && responseObj.notation != "") {
-        Mojo.Log.info("Login success!");
-        appModel.AppSettingsCurrent["ChessMove"] = responseObj.notation;
-        appModel.SaveSettings();
+        Mojo.Log.info("Update success!");
         //Dismiss this dialog
-        this.doneCallBack(true);
+        this.doneCallBack(appModel.LastTaskSelected);
         this.widget.mojo.close();
     } else {
-        Mojo.Log.warn("Login failure!" + response);
+        Mojo.Log.warn("Update failure!" + response);
     }
-    */
-    this.doneCallBack(true);
-    this.widget.mojo.close();
 }
 
 EditTaskAssistant.prototype.tryUpdateTask = function(callback) {
-    /* var thisTaskList = this.controller.getWidgetSetup("taskList");
-     for (var i = 0; i < thisTaskList.model.items.length; i++) {
-         if (thisTaskList.model.items[i].id == appModel.LastTaskSelected) {
-             thisTaskList.model.items[i].title = this.taskTitle;
-             thisTaskList.model.items[i].notes = this.taskNotes;
-         }
-     } */
+
     appModel.LastTaskSelected.title = this.taskTitle;
     appModel.LastTaskSelected.notes = this.taskNotes;
-    this.doneCallBack(appModel.LastTaskSelected);
-    this.widget.mojo.close();
+    if (!appModel.LastTaskSelected.notes)
+        appModel.LastTaskSelected.notes = "";
 
-    //serviceModel.UpdateTask(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], this.currentTaskId, this.currentTasks[this.currentTaskId], callback);
+    serviceModel.UpdateTask(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], appModel.LastTaskSelected, this.handleUpdateResponse.bind(this));
 }
 
 EditTaskAssistant.prototype.deactivate = function(event) {

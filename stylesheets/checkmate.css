@@ -5,6 +5,11 @@
     background-size: 32px 32px;
 }
 
+.task-title.new {
+    color: dimgray;
+    font-style: italic;
+}
+
 .checkmark {
     float: right;
     visibility: hidden;

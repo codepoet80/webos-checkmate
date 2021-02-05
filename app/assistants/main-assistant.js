@@ -157,7 +157,7 @@ MainAssistant.prototype.handleCommand = function(event) {
                 Mojo.Additions.ShowDialogBox("Sweep", "Do you want to purge all completed tasks?");
                 break;
             case 'do-new':
-                appModel.LastTaskSelected = { id: "new" };
+                appModel.LastTaskSelected = { guid: "new" };
                 this.showEditDialog();
                 break;
         }
@@ -178,24 +178,26 @@ MainAssistant.prototype.handleListClick = function(event) {
     appModel.LastTaskSelected = event.item;
 
     //Pop up Menu
-    var posTarget = "divCheck" + event.item.guid;
-    var completeLabel = "Uncomplete";
-    if (!event.item.completed)
-        completeLabel = "Complete";
-    this.controller.popupSubmenu({
-        onChoose: this.handlePopupChoose.bind(this, event.item),
-        placeNear: document.getElementById(posTarget),
-        items: [
-            { label: completeLabel, command: 'do-complete' },
-            { label: 'Edit', command: 'do-edit' },
-        ]
-    });
-    return true;
+    if (event.item.guid != "new") {
+        var posTarget = "divCheck" + event.item.guid;
+        var completeLabel = "Uncomplete";
+        if (!event.item.completed)
+            completeLabel = "Complete";
+        this.controller.popupSubmenu({
+            onChoose: this.handlePopupChoose.bind(this, event.item),
+            placeNear: document.getElementById(posTarget),
+            items: [
+                { label: completeLabel, command: 'do-complete' },
+                { label: 'Edit', command: 'do-edit' },
+            ]
+        });
+        return true;
+    }
+    return false;
 }
 
 MainAssistant.prototype.handlePopupChoose = function(task, command) {
     Mojo.Log.info("Perform: ", command, " on ", task.guid);
-
     switch (command) {
         case "do-complete":
             var thisTaskList = this.controller.getWidgetSetup("taskList");
@@ -204,6 +206,7 @@ MainAssistant.prototype.handlePopupChoose = function(task, command) {
             else
                 task.completed = true;
             this.controller.modelChanged(thisTaskList.model);
+            serviceModel.UpdateTask(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], task);
             break;
         case "do-edit":
             this.showEditDialog(task.guid);
@@ -248,15 +251,6 @@ MainAssistant.prototype.updateTaskList = function(notation, results) {
     var thisTaskList = this.controller.getWidgetSetup("taskList");
     thisTaskList.model.items = []; //remove the previous list
     for (var i = 0; i < results.length; i++) {
-
-        /* var newItem = {
-             id: results[i].guid,
-             title: results[i].title,
-             notes: results[i].notes,
-             completed: results[i].completed,
-             data: results[i]
-         }; */
-
         thisTaskList.model.items.push(results[i]);
     }
 
@@ -315,10 +309,18 @@ MainAssistant.prototype.showEditDialog = function(taskId) {
     }
 }
 
-MainAssistant.prototype.handleEditDialogDone = function(val) {
-    if (val) {
-        Mojo.Log.info("Updating tasks after successful edit!");
+MainAssistant.prototype.handleEditDialogDone = function(task) {
+    if (task) {
         var thisTaskList = this.controller.getWidgetSetup("taskList");
+        if (task.guid == "new") {
+            Mojo.Log.info("Updating tasks after successful creation of new task!");
+            thisTaskList.model.items.unshift(task);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            this.fetchTasks();
+        } else {
+            Mojo.Log.info("Updating tasks after successful edit!");
+
+        }
         this.controller.modelChanged(thisTaskList.model);
     } else {
         //User hit cancel

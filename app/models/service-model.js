@@ -50,19 +50,21 @@ ServiceModel.prototype.GetTasks = function(notation, grandmaster, callback) {
 }
 
 //HTTP request to search podcasts
-ServiceModel.prototype.UpdateTask = function(notation, grandmaster, taskId, taskData, callback) {
+ServiceModel.prototype.UpdateTask = function(notation, grandmaster, taskData, callback) {
     this.retVal = "";
     if (callback)
         callback = callback.bind(this);
 
-    var theQuery = this.buildURL("read-notation") + "?move=" + notation;
-    Mojo.Log.info("Getting task list with query: " + theQuery);
+    var theQuery = this.buildURL("update-notation") + "?move=" + notation;
+    Mojo.Log.info("Update task list at URL: " + theQuery + " with data: " + JSON.stringify(taskData));
+
     var xmlhttp = new XMLHttpRequest();
-    xmlhttp.open("GET", theQuery);
+    xmlhttp.open("POST", theQuery);
     xmlhttp.setRequestHeader("grandmaster", grandmaster);
-    xmlhttp.send();
+    xmlhttp.send(JSON.stringify(taskData));
     xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+            Mojo.Log.info("Got Update response from service: " + xmlhttp.responseText);
             if (callback)
                 callback(xmlhttp.responseText);
         }
