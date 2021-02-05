@@ -1,0 +1,38 @@
+<div class="palm-dialog-content">
+    <div id="hue-title" class="palm-dialog-title">
+        Log In to Check Mate
+    </div>
+    <div class="palm-dialog-seperator"></div>
+
+    <div class="textfield-group" x-mojo-focus-highlight="true">
+        <div class="title">
+            <div id="txtChessMove" name="txtChessMove" x-mojo-element="TextField" title="ChessMove"></div>
+        </div>
+    </div>
+
+    <div class="textfield-group" x-mojo-focus-highlight="true">
+        <div class="title">
+            <div id="txtGrandmaster" name="txtGrandmaster" x-mojo-element="TextField" title="Grandmaster"></div>
+        </div>
+    </div>
+
+    <div class="palm-group" id="linkError" style="display:none" id="showHueLink" name="showHueLink">
+        <div class="palm-group-title"><span style="color:white">Error</span></div>
+        <div class="hueerror">
+            There was no usable response from the Hue before its timeout.
+        </div>
+    </div>
+
+    <div class="palm-group" id="addressError" style="display:none" id="showHueLink" name="showHueLink">
+        <div class="palm-group-title"><span style="color:white">Error</span></div>
+        <div class="hueerror">
+            The entered IP address or host name for the Hue Bridge does not appear to be valid.
+        </div>
+    </div>
+
+    <div class="palm-dialog-buttons">
+        <div x-mojo-element="Button" id="goButton"></div>
+        <div x-mojo-element="Button" id="cancelButton"></div>
+    </div>
+
+</div>
