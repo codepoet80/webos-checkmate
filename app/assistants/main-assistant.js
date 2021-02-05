@@ -57,7 +57,8 @@ MainAssistant.prototype.setup = function() {
             visible: true,
             items: [{
                     items: [
-                        { label: 'Sweep', iconPath: 'sweep.png', command: 'do-sweep' }
+                        { label: 'Sweep', iconPath: 'sweep.png', command: 'do-sweep' },
+                        { label: 'Refresh', icon: 'refresh', command: 'do-refresh' }
                     ]
                 },
                 {
@@ -160,6 +161,9 @@ MainAssistant.prototype.handleCommand = function(event) {
                 appModel.LastTaskSelected = { guid: "new" };
                 this.showEditDialog();
                 break;
+            case 'do-refresh':
+                this.fetchTasks();
+                break;
         }
     }
 }
@@ -187,8 +191,8 @@ MainAssistant.prototype.handleListClick = function(event) {
             onChoose: this.handlePopupChoose.bind(this, event.item),
             placeNear: document.getElementById(posTarget),
             items: [
-                { label: completeLabel, command: 'do-complete' },
                 { label: 'Edit', command: 'do-edit' },
+                { label: completeLabel, command: 'do-complete' }
             ]
         });
         return true;
@@ -315,13 +319,12 @@ MainAssistant.prototype.handleEditDialogDone = function(task) {
         if (task.guid == "new") {
             Mojo.Log.info("Updating tasks after successful creation of new task!");
             thisTaskList.model.items.unshift(task);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            this.fetchTasks();
+            this.controller.getSceneScroller().mojo.revealTop(true);
         } else {
             Mojo.Log.info("Updating tasks after successful edit!");
-
         }
         this.controller.modelChanged(thisTaskList.model);
+        this.fetchTasks();
     } else {
         //User hit cancel
     }
