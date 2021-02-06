@@ -20,7 +20,7 @@ var AppModel = function() {
     this.AppSettingsDefaults = {
         ChessMove: "",
         Grandmaster: "",
-        ListTitle: "Results",
+        SoundTheme: 1,
         RefreshTimeout: null,
         UseCustomEndpoint: false,
         EndpointURL: "",

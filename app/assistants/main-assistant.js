@@ -57,7 +57,7 @@ MainAssistant.prototype.setup = function() {
             visible: false,
             items: [{
                     items: [
-                        { label: 'Sweep', iconPath: 'sweep.png', command: 'do-sweep' },
+                        { label: 'Sweep', iconPath: 'images/sweep.png', command: 'do-sweep' },
                         { label: 'Refresh', icon: 'refresh', command: 'do-refresh' }
                     ]
                 },
@@ -89,16 +89,18 @@ MainAssistant.prototype.activate = function(event) {
     serviceModel.CustomEndpointURL = appModel.AppSettingsCurrent["EndpointURL"];
 
     //Set correct menu label
-    var loggedInLable = "Log In";
+    var loggedInLabel = "Log In";
     if (appModel.AppSettingsCurrent["ChessMove"] != "" && appModel.AppSettingsCurrent["Grandmaster"] != "") {
-        loggedInLable = "Log Out";
-
-        var thisWidgetModel = this.controller.getWidgetSetup(Mojo.Menu.commandMenu).model;
-        thisWidgetModel.visible = true;
-        this.controller.modelChanged(thisWidgetModel);
+        loggedInLabel = "Log Out";
+        var thisCommandModel = this.controller.getWidgetSetup(Mojo.Menu.commandMenu).model;
+        thisCommandModel.visible = true;
+        this.controller.modelChanged(thisCommandModel);
     }
-    this.appMenuModel.items[3].label = loggedInLable;
-    this.controller.modelChanged(this.appMenuModel);
+    var thisMenuModel = this.controller.getWidgetSetup(Mojo.Menu.appMenu).model;
+    thisMenuModel.items[3].label = loggedInLabel;
+    Mojo.Log.info("model changing menu to: " + loggedInLabel);
+    this.controller.modelChanged(thisMenuModel);
+    Mojo.Log.info("model changed menu");
 
     //find out what kind of device this is
     if (Mojo.Environment.DeviceInfo.platformVersionMajor >= 3) {
@@ -193,11 +195,11 @@ MainAssistant.prototype.handleListReorder = function(event) {
     }
     //Update Server
     serviceModel.UpdateTask(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], thisTaskList.model.items, this.handleServerResponse.bind(this));
-
 }
 
 MainAssistant.prototype.handleListDelete = function(event) {
     Mojo.Log.info("Item deleted: " + event.item.guid);
+    this.playSound("delete");
     event.item.sortPosition = -1;
     serviceModel.UpdateTask(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], event.item, this.handleServerResponse.bind(this));
 }
@@ -231,10 +233,15 @@ MainAssistant.prototype.handlePopupChoose = function(task, command) {
     switch (command) {
         case "do-complete":
             var thisTaskList = this.controller.getWidgetSetup("taskList");
-            if (task.completed)
+            if (task.completed) {
+                this.playSound("flick");
                 task.completed = false;
-            else
+            } else {
                 task.completed = true;
+                if (!this.checkForGameOver()) {
+                    this.playSound("completed");
+                }
+            }
             this.controller.modelChanged(thisTaskList.model);
             serviceModel.UpdateTask(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], task, this.handleServerResponse.bind(this));
             break;
@@ -310,6 +317,7 @@ MainAssistant.prototype.confirmSweep = function() {
         onChoose: function(value) {
             if (value) {
                 Mojo.Log.info("Cleaning up completed tasks!");
+                this.playSound("trash");
                 serviceModel.CleanupTasks(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], this.handleServerResponse.bind(this));
             } else
                 Mojo.Log.info("Cancelled cleaning up completed tasks!");
@@ -448,4 +456,28 @@ MainAssistant.prototype.moveElementInArray = function(arrayToShift, fromPos, toP
     }
     arrayToShift[toPos] = elementToMove;
     return arrayToShift;
+}
+
+MainAssistant.prototype.checkForGameOver = function() {
+    var thisTaskList = this.controller.getWidgetSetup("taskList");
+    var gameOver = true;
+    for (var i = 0; i < thisTaskList.model.items.length; i++) {
+        if (!thisTaskList.model.items[i].completed) {
+            gameOver = false;
+            break;
+        }
+    }
+    if (gameOver) {
+        this.playSound("checkmate");
+        Mojo.Additions.ShowDialogBox("Check Mate!", "<table width='100%'><tr><td align='center'><img src='images/checkmate.png' align='center'><br><b>Congrats!</b> You cleared the board!</td></tr></table>");
+    }
+    return gameOver;
+}
+
+MainAssistant.prototype.playSound = function(soundToPlay) {
+    if (appModel.AppSettingsCurrent["SoundTheme"] > 0) {
+        soundToPlay = "sounds/" + soundToPlay + appModel.AppSettingsCurrent["SoundTheme"] + ".mp3";
+        Mojo.Log.info("Trying to play sound: " + soundToPlay);
+        Mojo.Controller.getAppController().playSoundNotification("media", soundToPlay, 1200);
+    }
 }

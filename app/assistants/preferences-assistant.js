@@ -7,8 +7,23 @@ function PreferencesAssistant() {
 
 PreferencesAssistant.prototype.setup = function() {
     /* setup widgets here */
+    //Sound theme picker
+    this.controller.setupWidget("listSoundTheme",
+        this.attributes = {
+            label: $L("Sounds"),
+            choices: [
+                { label: "Silent", value: 0 },
+                { label: "Theme 1", value: 1 },
+                { label: "Theme 2", value: 2 }
+            ]
+        },
+        this.model = {
+            value: appModel.AppSettingsCurrent["SoundTheme"],
+            disabled: false
+        }
+    );
 
-    //Search result picker
+    //Refresh timeout picker
     this.controller.setupWidget("listRefresh",
         this.attributes = {
             label: $L("Refresh"),
@@ -65,6 +80,7 @@ PreferencesAssistant.prototype.setup = function() {
     this.controller.setupWidget(Mojo.Menu.appMenu, this.appMenuAttributes, this.appMenuModel);
 
     /* add event handlers to listen to events from widgets */
+    Mojo.Event.listen(this.controller.get("listSoundTheme"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
     Mojo.Event.listen(this.controller.get("listRefresh"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
     Mojo.Event.listen(this.controller.get("txtEndpointURL"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
     Mojo.Event.listen(this.controller.get("toggleCustomEndPoint"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
@@ -124,6 +140,7 @@ PreferencesAssistant.prototype.deactivate = function(event) {
     /* remove any event handlers you added in activate and do any other cleanup that should happen before
        this scene is popped or another scene is pushed on top */
 
+    Mojo.Event.stopListening(this.controller.get("listSoundTheme"), Mojo.Event.propertyChange, this.handleValueChange);
     Mojo.Event.stopListening(this.controller.get("listRefresh"), Mojo.Event.propertyChange, this.handleValueChange);
     Mojo.Event.stopListening(this.controller.get("txtEndpointURL"), Mojo.Event.propertyChange, this.handleValueChange);
     Mojo.Event.stopListening(this.controller.get("toggleCustomEndPoint"), Mojo.Event.propertyChange, this.handleValueChange);
