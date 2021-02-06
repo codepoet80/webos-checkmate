@@ -124,8 +124,12 @@ MainAssistant.prototype.activate = function(event) {
         if (appModel.AppSettingsCurrent["ChessMove"] != "" && appModel.AppSettingsCurrent["Grandmaster"] != "") {
             Mojo.Log.info("About to fetch tasks...");
             this.fetchTasks();
-            if (appModel.AppSettingsCurrent["RefreshTimeout"] != null) {
+            if (appModel.AppSettingsCurrent["RefreshTimeout"] && appModel.AppSettingsCurrent["RefreshTimeout"] > 1000) {
+                Mojo.Log.warn("Auto refresh interval: " + appModel.AppSettingsCurrent["RefreshTimeout"]);
+                clearInterval(this.refreshInt);
                 this.refreshInt = setInterval(this.fetchTasks.bind(this), appModel.AppSettingsCurrent["RefreshTimeout"]);
+            } else {
+                Mojo.Log.warn("Using Manual Refresh");
             }
             //handle launch with query
             if (appModel.LaunchQuery && appModel.LaunchQuery != "") {
@@ -175,17 +179,27 @@ MainAssistant.prototype.handleCommand = function(event) {
     }
 }
 
-MainAssistant.prototype.handleListReorder = function(event, toIndex, fromIndex) {
-    Mojo.Log.warn("List re-arranged. What now?");
-    //Loop through tasks
-    //Re-number each
-    //Save to server
+MainAssistant.prototype.handleListReorder = function(event) {
+    Mojo.Log.warn("List re-arranged: " + event.item.guid + " was " + event.fromIndex + " now " + event.toIndex);
+    var thisTaskList = this.controller.getWidgetSetup("taskList");
+    //Re-sort items array to match UI
+    thisTaskList.model.items = this.moveElementInArray(thisTaskList.model.items, event.fromIndex, event.toIndex);
+    //Re-number sortPos so server can store this order
+    var usePos = 1;
+    for (var i = thisTaskList.model.items.length - 1; i >= 0; i--) {
+        Mojo.Log.info("Renumbering " + thisTaskList.model.items[i].guid + " to " + usePos);
+        thisTaskList.model.items[i].sortPosition = usePos;
+        usePos++;
+    }
+    //Update Server
+    serviceModel.UpdateTask(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], thisTaskList.model.items, this.handleServerResponse.bind(this));
+
 }
 
 MainAssistant.prototype.handleListDelete = function(event) {
     Mojo.Log.info("Item deleted: " + event.item.guid);
     event.item.sortPosition = -1;
-    serviceModel.UpdateTask(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], event.item);
+    serviceModel.UpdateTask(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], event.item, this.handleServerResponse.bind(this));
 }
 
 MainAssistant.prototype.handleListClick = function(event) {
@@ -203,6 +217,7 @@ MainAssistant.prototype.handleListClick = function(event) {
             placeNear: document.getElementById(posTarget),
             items: [
                 { label: 'Edit', command: 'do-edit' },
+                { label: 'Show Notes', command: 'do-notes' },
                 { label: completeLabel, command: 'do-complete' }
             ]
         });
@@ -221,7 +236,13 @@ MainAssistant.prototype.handlePopupChoose = function(task, command) {
             else
                 task.completed = true;
             this.controller.modelChanged(thisTaskList.model);
-            serviceModel.UpdateTask(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], task);
+            serviceModel.UpdateTask(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], task, this.handleServerResponse.bind(this));
+            break;
+        case "do-notes":
+            var noteToShow = appModel.LastTaskSelected.notes;
+            if (!noteToShow || noteToShow == "")
+                noteToShow = "<i>No notes for this task</i>";
+            Mojo.Additions.ShowDialogBox("Task Notes", noteToShow);
             break;
         case "do-edit":
             this.showEditDialog(task.guid);
@@ -232,33 +253,10 @@ MainAssistant.prototype.handlePopupChoose = function(task, command) {
 /* Get Task Stuff */
 MainAssistant.prototype.fetchTasks = function() {
 
-    serviceModel.GetTasks(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], function(response) {
-        Mojo.Log.info("ready to process task list: " + response);
-        if (response != null && response != "") {
-            var responseObj = JSON.parse(response);
-            if (responseObj.status == "error") {
-                Mojo.Log.error("Error message from server while loading tasks: " + responseObj.msg);
-                Mojo.Additions.ShowDialogBox("Server Error", "The server responded to the task list request with: " + responseObj.msg.replace("ERROR: ", ""));
-            } else {
-                if (responseObj.tasks) {
-                    //If we got a good looking response, remember it, and update the UI
-                    //appModel.LastSearchResult = responseObj.tasks;
-                    this.updateTaskList(responseObj.notation, responseObj.tasks);
-                } else {
-                    Mojo.Log.warn("Task list was empty. Either there was no matching result, or there were server or connectivity problems.");
-                    Mojo.Additions.ShowDialogBox("No tasks", "The server did not report any matches for the specified task list.");
-                }
-            }
-        } else {
-            Mojo.Log.error("No usable response from server while loading tasks: " + response);
-            Mojo.Controller.errorDialog("The server did not answer with a usable response to the task list request. Check network connectivity and/or self-host settings.");
-            //Mojo.Additions.ShowDialogBox("Server Error", "The server did not answer with a usable response to the task list request. Check network connectivity and/or self-host settings.");
-        }
-
-    }.bind(this));
+    serviceModel.GetTasks(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], this.handleServerResponse.bind(this));
 }
 
-MainAssistant.prototype.updateTaskList = function(notation, results) {
+MainAssistant.prototype.updateTaskListWidget = function(notation, results) {
 
     Mojo.Log.info("Displaying notation: " + notation);
     $("spnNotation").innerHTML = notation;
@@ -312,7 +310,7 @@ MainAssistant.prototype.confirmSweep = function() {
         onChoose: function(value) {
             if (value) {
                 Mojo.Log.info("Cleaning up completed tasks!");
-                serviceModel.CleanupTasks(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], this.handleCleanupDone.bind(this));
+                serviceModel.CleanupTasks(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], this.handleServerResponse.bind(this));
             } else
                 Mojo.Log.info("Cancelled cleaning up completed tasks!");
         },
@@ -325,18 +323,28 @@ MainAssistant.prototype.confirmSweep = function() {
     });
 }
 
-MainAssistant.prototype.handleCleanupDone = function(response) {
-    Mojo.Log.info("Clean up response was: " + response);
-    try {
+/* Server Response Handler */
+
+MainAssistant.prototype.handleServerResponse = function(response) {
+    Mojo.Log.info("ready to process task list: " + response);
+    if (response != null && response != "") {
         var responseObj = JSON.parse(response);
-    } catch (ex) {
-        Mojo.Log.error("Could not parse login response!");
-    }
-    if (responseObj && responseObj.notation && responseObj.notation != "") {
-        Mojo.Log.info("Cleanup success!");
-        this.fetchTasks();
+        if (responseObj.status == "error") {
+            Mojo.Log.error("Error message from server while loading tasks: " + responseObj.msg);
+            Mojo.Controller.errorDialog("The server responded to the task list request with: " + responseObj.msg.replace("ERROR: ", ""));
+        } else {
+            if (responseObj.tasks) {
+                //If we got a good looking response update the UI
+                this.updateTaskListWidget(responseObj.notation, responseObj.tasks);
+            } else {
+                Mojo.Log.warn("Task list was empty. Either there was no matching result, or there were server or connectivity problems.");
+                Mojo.Additions.ShowDialogBox("No tasks", "The server did not report any matches for the specified task list.");
+            }
+        }
     } else {
-        Mojo.Log.warn("Cleanup failure!" + response);
+        Mojo.Log.error("No usable response from server while loading tasks: " + response);
+        Mojo.Controller.errorDialog("The server did not answer with a usable response to the task list request. Check network connectivity and/or self-host settings.");
+        //Mojo.Additions.ShowDialogBox("Server Error", "The server did not answer with a usable response to the task list request. Check network connectivity and/or self-host settings.");
     }
 }
 
@@ -420,7 +428,7 @@ MainAssistant.prototype.handleLoginDialogDone = function(val) {
 MainAssistant.prototype.deactivate = function(event) {
     /* remove any event handlers you added in activate and do any other cleanup that should happen before
        this scene is popped or another scene is pushed on top */
-
+    clearInterval(this.refreshInt);
     Mojo.Event.stopListening(this.controller.get("taskList"), Mojo.Event.listReorder, this.handleListReorder);
     Mojo.Event.stopListening(this.controller.get("taskList"), Mojo.Event.listDelete, this.handleListDelete);
     Mojo.Event.stopListening(this.controller.get("taskList"), Mojo.Event.listTap, this.handleListClick);
@@ -430,3 +438,14 @@ MainAssistant.prototype.cleanup = function(event) {
     /* this function should do any cleanup needed before the scene is destroyed as 
        a result of being popped off the scene stack */
 };
+
+/* Helper Functions */
+
+MainAssistant.prototype.moveElementInArray = function(arrayToShift, fromPos, toPos) {
+    var elementToMove = arrayToShift[fromPos];
+    for (var i = fromPos; i >= toPos; i--) {
+        arrayToShift[i] = arrayToShift[i - 1];
+    }
+    arrayToShift[toPos] = elementToMove;
+    return arrayToShift;
+}

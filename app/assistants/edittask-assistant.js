@@ -20,11 +20,12 @@ EditTaskAssistant.prototype.setup = function(widget) {
             textFieldName: "TaskTitle",
             hintText: "Task Title",
             property: 'value',
-            multi: false,
+            multiline: false,
             changeOnKeyPress: true,
-            textReplacement: false,
+            autoReplace: true,
+            textCase: Mojo.Widget.steModeSentenceCase,
             requiresEnterKey: false,
-            focus: false
+            focus: true
         },
         this.model = {
             value: appModel.LastTaskSelected.title,
@@ -36,9 +37,10 @@ EditTaskAssistant.prototype.setup = function(widget) {
             textFieldName: "TaskNotes",
             hintText: "Notes",
             property: 'value',
-            multi: false,
+            multiline: true,
             changeOnKeyPress: true,
-            textReplacement: false,
+            autoReplace: true,
+            textCase: Mojo.Widget.steModeSentenceCase,
             requiresEnterKey: false,
             focus: false
         },

@@ -13,7 +13,7 @@ PreferencesAssistant.prototype.setup = function() {
         this.attributes = {
             label: $L("Refresh"),
             choices: [
-                { label: "Manual", value: null },
+                { label: "Manual", value: "" },
                 { label: "1 minute", value: 60000 },
                 { label: "2 minutes", value: 120000 },
                 { label: "3 minutes", value: 180000 },

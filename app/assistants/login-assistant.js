@@ -20,9 +20,10 @@ LoginAssistant.prototype.setup = function(widget) {
             textFieldName: "ChessMove",
             hintText: "Your Chess Move",
             property: 'value',
-            multi: false,
+            multiline: false,
             changeOnKeyPress: true,
-            textReplacement: false,
+            autoReplace: true,
+            textCase: Mojo.Widget.steModeTitleCase,
             requiresEnterKey: false,
             focus: false
         },
@@ -36,9 +37,10 @@ LoginAssistant.prototype.setup = function(widget) {
             textFieldName: "Grandmaster",
             hintText: "Your Grandmaster",
             property: 'value',
-            multi: false,
+            multiline: false,
             changeOnKeyPress: true,
-            textReplacement: false,
+            autoReplace: false,
+            textCase: Mojo.Widget.steModeTitleCase,
             requiresEnterKey: false,
             focus: false
         },
@@ -74,7 +76,7 @@ LoginAssistant.prototype.activate = function(event) {
 
 LoginAssistant.prototype.handleValueChange = function(event) {
     //Mojo.Log.info(event.srcElement.title + " now: " + event.value);
-    if (event.srcElement.title == "ChessMove" && event.value == "jjj" && devModeChessMove && devModeGrandmaster) {
+    if (event.srcElement.title == "ChessMove" && event.value.toLowerCase() == "jjj" && devModeChessMove && devModeGrandmaster) {
         Mojo.Controller.getAppController().showBanner("Dev mode enabled!", { source: 'notification' });
         Mojo.Log.warn("Switching to Developer Mode! " + devModeChessMove);
         appModel.AppSettingsCurrent["ChessMove"] = devModeChessMove;
@@ -83,7 +85,6 @@ LoginAssistant.prototype.handleValueChange = function(event) {
         //We stashed the preference name in the title of the HTML element, so we don't have to use a case statement
         appModel.AppSettingsCurrent[event.srcElement.title] = event.value;
     }
-    appModel.SaveSettings();
 }
 
 LoginAssistant.prototype.handleCancelPress = function(event) {
@@ -94,11 +95,14 @@ LoginAssistant.prototype.handleCancelPress = function(event) {
 LoginAssistant.prototype.handleGoPress = function(event) {
 
     //Update UI for this state
-    //$("linkInformation").style.display = "none";
     $("addressError").style.display = "none";
     $("linkError").style.display = "none";
 
     this.tryServiceLogin(this.handleLoginResponse.bind(this));
+}
+
+LoginAssistant.prototype.tryServiceLogin = function(callback) {
+    serviceModel.GetTasks(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], callback);
 }
 
 LoginAssistant.prototype.handleLoginResponse = function(response) {
@@ -106,7 +110,12 @@ LoginAssistant.prototype.handleLoginResponse = function(response) {
     try {
         var responseObj = JSON.parse(response);
     } catch (ex) {
-        Mojo.Log.error("Could not parse login response!");
+        Mojo.Log.error("Could not parse login response: " + response);
+        //Show error message
+        Mojo.Controller.errorDialog("The server response to the log in request was malformed. Login failed.");
+        //Dismiss this dialog
+        this.doneCallBack(false);
+        this.widget.mojo.close();
     }
     if (responseObj && responseObj.notation && responseObj.notation != "") {
         Mojo.Log.info("Login success!");
@@ -117,12 +126,13 @@ LoginAssistant.prototype.handleLoginResponse = function(response) {
         this.widget.mojo.close();
     } else {
         Mojo.Log.warn("Login failure!" + response);
+        //Show error message
+        Mojo.Controller.errorDialog("Login failure. Check connectivity and your credentials. If you haven't logged in for a long time, create a new account.");
+        //Dismiss this dialog
+        this.doneCallBack(false);
+        this.widget.mojo.close();
     }
 
-}
-
-LoginAssistant.prototype.tryServiceLogin = function(callback) {
-    serviceModel.GetTasks(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], callback);
 }
 
 LoginAssistant.prototype.deactivate = function(event) {
