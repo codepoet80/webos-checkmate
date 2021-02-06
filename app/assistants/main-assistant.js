@@ -50,11 +50,11 @@ MainAssistant.prototype.setup = function() {
     this.controller.setupWidget(Mojo.Menu.appMenu, this.appMenuAttributes, this.appMenuModel);
     //Command Buttons
     this.cmdMenuAttributes = {
-            spacerHeight: 0,
-            menuClass: 'no-fade'
+            spacerHeight: 40,
+            //menuClass: 'no-fade'
         },
         this.cmdMenuModel = {
-            visible: true,
+            visible: false,
             items: [{
                     items: [
                         { label: 'Sweep', iconPath: 'sweep.png', command: 'do-sweep' },
@@ -71,6 +71,7 @@ MainAssistant.prototype.setup = function() {
     this.controller.setupWidget(Mojo.Menu.commandMenu, this.cmdMenuAttributes, this.cmdMenuModel);
     /* Always on Event handlers */
     Mojo.Event.listen(this.controller.get("taskList"), Mojo.Event.listReorder, this.handleListReorder.bind(this));
+    Mojo.Event.listen(this.controller.get("taskList"), Mojo.Event.listDelete, this.handleListDelete.bind(this));
     Mojo.Event.listen(this.controller.get("taskList"), Mojo.Event.listTap, this.handleListClick.bind(this));
 
     //Check for updates
@@ -89,8 +90,13 @@ MainAssistant.prototype.activate = function(event) {
 
     //Set correct menu label
     var loggedInLable = "Log In";
-    if (appModel.AppSettingsCurrent["ChessMove"] != "" && appModel.AppSettingsCurrent["Grandmaster"] != "")
+    if (appModel.AppSettingsCurrent["ChessMove"] != "" && appModel.AppSettingsCurrent["Grandmaster"] != "") {
         loggedInLable = "Log Out";
+
+        var thisWidgetModel = this.controller.getWidgetSetup(Mojo.Menu.commandMenu).model;
+        thisWidgetModel.visible = true;
+        this.controller.modelChanged(thisWidgetModel);
+    }
     this.appMenuModel.items[3].label = loggedInLable;
     this.controller.modelChanged(this.appMenuModel);
 
@@ -113,19 +119,20 @@ MainAssistant.prototype.activate = function(event) {
     if (appModel.AppSettingsCurrent["FirstRun"]) {
         appModel.AppSettingsCurrent["FirstRun"] = false;
         appModel.SaveSettings();
-        Mojo.Additions.ShowDialogBox("Welcome to Check Mate!", "Your To Do list anywhere! This client app can be used with a web service and web app that lets you manage your to do list from webOS or from virtually any web browser -- from 1997 to 2021. Start by using the menu to Log In.");
+        this.showWelcomePrompt();
     } else {
-        //handle launch with query
-        if (appModel.LaunchQuery && appModel.LaunchQuery != "") {
-            Mojo.Log.info("using launch query: " + appModel.LaunchQuery);
-        } else {
-            if (appModel.AppSettingsCurrent["ChessMove"] != "" && appModel.AppSettingsCurrent["Grandmaster"] != "") {
-                Mojo.Log.info("About to fetch tasks...");
-                this.fetchTasks();
-            } else {
-                this.showLogin();
+        if (appModel.AppSettingsCurrent["ChessMove"] != "" && appModel.AppSettingsCurrent["Grandmaster"] != "") {
+            Mojo.Log.info("About to fetch tasks...");
+            this.fetchTasks();
+            if (appModel.AppSettingsCurrent["RefreshTimeout"] != null) {
+                this.refreshInt = setInterval(this.fetchTasks.bind(this), appModel.AppSettingsCurrent["RefreshTimeout"]);
             }
-
+            //handle launch with query
+            if (appModel.LaunchQuery && appModel.LaunchQuery != "") {
+                Mojo.Log.info("using launch query: " + appModel.LaunchQuery);
+            }
+        } else {
+            this.showWelcomePrompt();
         }
     }
 };
@@ -155,7 +162,7 @@ MainAssistant.prototype.handleCommand = function(event) {
                 Mojo.Additions.ShowDialogBox("Check Mate - " + Mojo.Controller.appInfo.version, "Check Mate app for webOS. Copyright 2021, Jon Wise. Distributed under an MIT License.<br>Source code available at: https://github.com/codepoet80/webos-checkmate");
                 break;
             case 'do-sweep':
-                Mojo.Additions.ShowDialogBox("Sweep", "Do you want to purge all completed tasks?");
+                this.confirmSweep();
                 break;
             case 'do-new':
                 appModel.LastTaskSelected = { guid: "new" };
@@ -168,13 +175,17 @@ MainAssistant.prototype.handleCommand = function(event) {
     }
 }
 
-MainAssistant.prototype.handleClick = function(event) {
-    //this.disableUI();
+MainAssistant.prototype.handleListReorder = function(event, toIndex, fromIndex) {
+    Mojo.Log.warn("List re-arranged. What now?");
+    //Loop through tasks
+    //Re-number each
+    //Save to server
 }
 
-MainAssistant.prototype.handleListReorder = function(event) {
-    Mojo.Log.info("Item drag end");
-    this.allowPopup = true;
+MainAssistant.prototype.handleListDelete = function(event) {
+    Mojo.Log.info("Item deleted: " + event.item.guid);
+    event.item.sortPosition = -1;
+    serviceModel.UpdateTask(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], event.item);
 }
 
 MainAssistant.prototype.handleListClick = function(event) {
@@ -244,13 +255,13 @@ MainAssistant.prototype.fetchTasks = function() {
             //Mojo.Additions.ShowDialogBox("Server Error", "The server did not answer with a usable response to the task list request. Check network connectivity and/or self-host settings.");
         }
 
-        this.enableUI();
     }.bind(this));
 }
 
 MainAssistant.prototype.updateTaskList = function(notation, results) {
 
     Mojo.Log.info("Displaying notation: " + notation);
+    $("spnNotation").innerHTML = notation;
 
     var thisTaskList = this.controller.getWidgetSetup("taskList");
     thisTaskList.model.items = []; //remove the previous list
@@ -261,41 +272,6 @@ MainAssistant.prototype.updateTaskList = function(notation, results) {
     Mojo.Log.info("Updating task list widget with " + results.length + " results!");
     $("showTaskList").style.display = "block";
     this.controller.modelChanged(thisTaskList.model);
-}
-
-MainAssistant.prototype.disableUI = function(statusValue) {
-    //start spinner
-    if (!this.spinnerModel.spinning) {
-        this.spinnerModel.spinning = true;
-        this.controller.modelChanged(this.spinnerModel);
-    }
-
-    if (statusValue && statusValue != "") {
-        $("divWorkingStatus").style.display = "block";
-        $("divStatusValue").innerHTML = statusValue;
-    } else {
-        $("divWorkingStatus").style.display = "none";
-    }
-
-    //disable submit button
-    if (!this.submitBtnModel.disabled) {
-        this.submitBtnModel.disabled = true;
-        this.controller.modelChanged(this.submitBtnModel);
-    }
-}
-
-MainAssistant.prototype.enableUI = function() {
-    //stop spinner
-    this.spinnerModel.spinning = false;
-    this.controller.modelChanged(this.spinnerModel);
-
-    //hide status
-    $("divWorkingStatus").style.display = "none";
-    $("divStatusValue").innerHTML = "";
-
-    //enable submit button
-    //this.submitBtnModel.disabled = false;
-    //this.controller.modelChanged(this.submitBtnModel);
 }
 
 /* Edit Task Dialog Stuff */
@@ -330,16 +306,68 @@ MainAssistant.prototype.handleEditDialogDone = function(task) {
     }
 }
 
+/* Cleanup Stuff */
+MainAssistant.prototype.confirmSweep = function() {
+    this.controller.showAlertDialog({
+        onChoose: function(value) {
+            if (value) {
+                Mojo.Log.info("Cleaning up completed tasks!");
+                serviceModel.CleanupTasks(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], this.handleCleanupDone.bind(this));
+            } else
+                Mojo.Log.info("Cancelled cleaning up completed tasks!");
+        },
+        title: "Clean Up",
+        message: "This will delete all completed tasks. Do you want to proceed?",
+        choices: [
+            { label: 'Yes', value: true, type: 'negative' },
+            { label: 'No', value: false, type: 'neutral' },
+        ]
+    });
+}
+
+MainAssistant.prototype.handleCleanupDone = function(response) {
+    Mojo.Log.info("Clean up response was: " + response);
+    try {
+        var responseObj = JSON.parse(response);
+    } catch (ex) {
+        Mojo.Log.error("Could not parse login response!");
+    }
+    if (responseObj && responseObj.notation && responseObj.notation != "") {
+        Mojo.Log.info("Cleanup success!");
+        this.fetchTasks();
+    } else {
+        Mojo.Log.warn("Cleanup failure!" + response);
+    }
+}
+
 /* Login Stuff */
+MainAssistant.prototype.showWelcomePrompt = function() {
+    this.controller.showAlertDialog({
+        onChoose: function(value) {
+            if (value == "login") {
+                this.showLogin();
+            } else
+                Mojo.Additions.ShowDialogBox("Not implemented yet", "Visit http://checkmate.webosarchive.com to sign up, then come back here with the credentials you get there");
+        },
+        title: "Welcome to Check Mate!",
+        message: "Your To Do list anywhere! This client app can be used with a web service and web app that lets you manage your to do list from webOS or from virtually any web browser -- from 1997 to 2021. Do you want to Log In to an existing list, or create a new one?",
+        choices: [
+            { label: 'Log In', value: "login", type: 'affirmative' },
+            { label: 'Create New', value: "new", type: 'neutral' },
+        ]
+    });
+}
+
 MainAssistant.prototype.doLogInOut = function() {
     if (appModel.AppSettingsCurrent["ChessMove"] == "" && appModel.AppSettingsCurrent["Grandmaster"] == "") {
-        this.showLogin();
+        this.showWelcomePrompt();
     } else {
         //Remove existing tasks
         var thisWidgetSetup = this.controller.getWidgetSetup("taskList");
         thisWidgetSetup.model.items = [];
         $("showTaskList").style.display = "none";
         this.controller.modelChanged(thisWidgetSetup.model);
+        this.controller.getSceneScroller().mojo.revealTop(true);
         //Clear credentials
         appModel.AppSettingsCurrent["ChessMove"] = "";
         appModel.AppSettingsCurrent["Grandmaster"] = "";
@@ -347,7 +375,12 @@ MainAssistant.prototype.doLogInOut = function() {
         //Update menu label
         this.appMenuModel.items[3].label = "Log In";
         this.controller.modelChanged(this.appMenuModel);
-        this.showLogin();
+        //Hide Command Menu
+        var thisWidgetModel = this.controller.getWidgetSetup(Mojo.Menu.commandMenu).model;
+        thisWidgetModel.visible = false;
+        this.controller.modelChanged(thisWidgetModel);
+        //Prompt User
+        this.showWelcomePrompt();
     }
 }
 
@@ -371,6 +404,10 @@ MainAssistant.prototype.handleLoginDialogDone = function(val) {
         //Update menu label
         this.appMenuModel.items[3].label = "Log Out";
         this.controller.modelChanged(this.appMenuModel);
+        //Show command menu
+        var thisWidgetModel = this.controller.getWidgetSetup(Mojo.Menu.commandMenu).model;
+        thisWidgetModel.visible = true;
+        this.controller.modelChanged(thisWidgetModel);
         //Get new task list
         this.fetchTasks();
     } else {
@@ -383,10 +420,10 @@ MainAssistant.prototype.handleLoginDialogDone = function(val) {
 MainAssistant.prototype.deactivate = function(event) {
     /* remove any event handlers you added in activate and do any other cleanup that should happen before
        this scene is popped or another scene is pushed on top */
-    Mojo.Event.stopListening(this.controller.get("btnGet"), Mojo.Event.tap, this.handleClick);
+
+    Mojo.Event.stopListening(this.controller.get("taskList"), Mojo.Event.listReorder, this.handleListReorder);
+    Mojo.Event.stopListening(this.controller.get("taskList"), Mojo.Event.listDelete, this.handleListDelete);
     Mojo.Event.stopListening(this.controller.get("taskList"), Mojo.Event.listTap, this.handleListClick);
-    // Non-Mojo widgets
-    //$("imgSearchClear").removeEventListener("click", this.handleClearTap);
 };
 
 MainAssistant.prototype.cleanup = function(event) {

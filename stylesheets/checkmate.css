@@ -13,6 +13,7 @@
 .checkmark {
     float: right;
     visibility: hidden;
+    margin-top: 2px;
 }
 
 .checkmark.true {

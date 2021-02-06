@@ -8,34 +8,20 @@ function PreferencesAssistant() {
 PreferencesAssistant.prototype.setup = function() {
     /* setup widgets here */
 
-    //Timeout picker
-    this.controller.setupWidget("listShowmax",
-        this.attributes = {
-            label: $L("Tiny Max"),
-            choices: [
-                { label: "5 episodes", value: 5 },
-                { label: "10 episodes", value: 10 },
-                { label: "20 episodes", value: 20 },
-                { label: "30 episodes", value: 30 }
-            ]
-        },
-        this.model = {
-            value: appModel.AppSettingsCurrent["ShowMax"],
-            disabled: false
-        }
-    );
     //Search result picker
-    this.controller.setupWidget("listSearchmax",
+    this.controller.setupWidget("listRefresh",
         this.attributes = {
-            label: $L("Max Results"),
+            label: $L("Refresh"),
             choices: [
-                { label: "10", value: 10 },
-                { label: "25", value: 25 },
-                { label: "50", value: 50 }
+                { label: "Manual", value: null },
+                { label: "1 minute", value: 60000 },
+                { label: "2 minutes", value: 120000 },
+                { label: "3 minutes", value: 180000 },
+                { label: "5 minutes", value: 300000 }
             ]
         },
         this.model = {
-            value: appModel.AppSettingsCurrent["SearchResultMax"],
+            value: appModel.AppSettingsCurrent["RefreshTimeout"],
             disabled: false
         }
     );
@@ -79,8 +65,7 @@ PreferencesAssistant.prototype.setup = function() {
     this.controller.setupWidget(Mojo.Menu.appMenu, this.appMenuAttributes, this.appMenuModel);
 
     /* add event handlers to listen to events from widgets */
-    Mojo.Event.listen(this.controller.get("listShowmax"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
-    Mojo.Event.listen(this.controller.get("listSearchmax"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
+    Mojo.Event.listen(this.controller.get("listRefresh"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
     Mojo.Event.listen(this.controller.get("txtEndpointURL"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
     Mojo.Event.listen(this.controller.get("toggleCustomEndPoint"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
     Mojo.Event.listen(this.controller.get("btnOK"), Mojo.Event.tap, this.okClick.bind(this));
@@ -139,11 +124,10 @@ PreferencesAssistant.prototype.deactivate = function(event) {
     /* remove any event handlers you added in activate and do any other cleanup that should happen before
        this scene is popped or another scene is pushed on top */
 
-    Mojo.Event.stopListening(this.controller.get("listSearchmax"), Mojo.Event.propertyChange, this.handleValueChange);
-    Mojo.Event.stopListening(this.controller.get("listShowmax"), Mojo.Event.propertyChange, this.handleValueChange);
+    Mojo.Event.stopListening(this.controller.get("listRefresh"), Mojo.Event.propertyChange, this.handleValueChange);
+    Mojo.Event.stopListening(this.controller.get("txtEndpointURL"), Mojo.Event.propertyChange, this.handleValueChange);
     Mojo.Event.stopListening(this.controller.get("toggleCustomEndPoint"), Mojo.Event.propertyChange, this.handleValueChange);
     Mojo.Event.stopListening(this.controller.get("btnOK"), Mojo.Event.tap, this.okClick.bind(this));
-
 };
 
 PreferencesAssistant.prototype.cleanup = function(event) {

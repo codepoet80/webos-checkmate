@@ -57,25 +57,28 @@ EditTaskAssistant.prototype.setup = function(widget) {
     );
     this.sceneAssistant.controller.setupWidget("goButton", { type: Mojo.Widget.activityButton }, { label: "OK", disabled: false });
     this.sceneAssistant.controller.setupWidget("cancelButton", { type: Mojo.Widget.button }, { label: "Cancel", disabled: false });
-
-    /* add event handlers to listen to events from widgets */
-    Mojo.Event.listen(this.sceneAssistant.controller.get("txtTaskTitle"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
-    Mojo.Event.listen(this.sceneAssistant.controller.get("txtTaskNotes"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
-    Mojo.Event.listen(this.sceneAssistant.controller.get("goButton"), Mojo.Event.tap, this.handleGoPress.bind(this));
-    Mojo.Event.listen(this.sceneAssistant.controller.get("cancelButton"), Mojo.Event.tap, this.handleCancelPress.bind(this));
 };
 
 EditTaskAssistant.prototype.activate = function(event) {
     Mojo.Log.info("EditTask assistant activated for task: " + appModel.LastTaskSelected.guid);
-    /* put in event handlers here that should only be in effect when this scene is active. For
-	   example, key handlers that are observing the document */
+    this.taskTitle = appModel.LastTaskSelected.title;
+    this.taskNotes = appModel.LastTaskSelected.notes;
+    if (appModel.LastTaskSelected.guid == "new") {
+        $("divEditTitle").innerHTML = "New Task";
+    } else {
+        $("divEditTitle").innerHTML = "Edit Task";
+    }
 
+
+    /* add event handlers to listen to events from widgets */
+    Mojo.Event.listen(this.sceneAssistant.controller.get("txtTaskTitle"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
+    Mojo.Event.listen(this.sceneAssistant.controller.get("txtTaskNotes"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
+    Mojo.Event.listen(this.sceneAssistant.controller.get("goButton"), Mojo.Event.tap, this.handleOKPress.bind(this));
+    Mojo.Event.listen(this.sceneAssistant.controller.get("cancelButton"), Mojo.Event.tap, this.handleCancelPress.bind(this));
 };
 
-this.taskTitle = "";
-this.taskNotes = "";
 EditTaskAssistant.prototype.handleValueChange = function(event) {
-    Mojo.Log.info(event.srcElement.title + " now: " + event.value);
+    //Mojo.Log.info(event.srcElement.title + " now: " + event.value);
     switch (event.srcElement.title) {
         case "TaskTitle":
             this.taskTitle = event.value;
@@ -91,14 +94,12 @@ EditTaskAssistant.prototype.handleCancelPress = function(event) {
     this.widget.mojo.close();
 }
 
-EditTaskAssistant.prototype.handleGoPress = function(event) {
-
-    //Update UI for this state
-    //$("linkInformation").style.display = "none";
-    //$("addressError").style.display = "none";
-    //$("linkError").style.display = "none";
-
-    this.tryUpdateTask(this.handleUpdateResponse.bind(this));
+EditTaskAssistant.prototype.handleOKPress = function(event) {
+    if (this.taskTitle && this.taskTitle != "") {
+        this.tryUpdateTask(this.handleUpdateResponse.bind(this));
+    } else {
+        this.handleCancelPress(event);
+    }
 }
 
 EditTaskAssistant.prototype.handleUpdateResponse = function(response) {
@@ -134,7 +135,7 @@ EditTaskAssistant.prototype.deactivate = function(event) {
        this scene is popped or another scene is pushed on top */
     Mojo.Event.stopListening(this.sceneAssistant.controller.get("txtTaskTitle"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
     Mojo.Event.stopListening(this.sceneAssistant.controller.get("txtTaskNotes"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));
-    Mojo.Event.stopListening(this.sceneAssistant.controller.get("goButton"), Mojo.Event.tap, this.handleGoPress.bind(this));
+    Mojo.Event.stopListening(this.sceneAssistant.controller.get("goButton"), Mojo.Event.tap, this.handleOKPress.bind(this));
     Mojo.Event.stopListening(this.sceneAssistant.controller.get("cancelButton"), Mojo.Event.tap, this.handleCancelPress.bind(this));
 };
 

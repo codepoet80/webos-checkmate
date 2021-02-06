@@ -73,7 +73,7 @@ LoginAssistant.prototype.activate = function(event) {
 };
 
 LoginAssistant.prototype.handleValueChange = function(event) {
-    Mojo.Log.info(event.srcElement.title + " now: " + event.value);
+    //Mojo.Log.info(event.srcElement.title + " now: " + event.value);
     if (event.srcElement.title == "ChessMove" && event.value == "jjj" && devModeChessMove && devModeGrandmaster) {
         Mojo.Controller.getAppController().showBanner("Dev mode enabled!", { source: 'notification' });
         Mojo.Log.warn("Switching to Developer Mode! " + devModeChessMove);

@@ -13,8 +13,6 @@ var AppModel = function() {
 
     //Define your app-wide, non-persisted settings here
     this.LaunchQuery = "";
-    this.LastSearchString = null;
-    this.LastSearchResult = [];
     this.LastTaskSelected = null;
 
     //Define your app preferences (to be saved by OS)
@@ -23,10 +21,9 @@ var AppModel = function() {
         ChessMove: "",
         Grandmaster: "",
         ListTitle: "Results",
+        RefreshTimeout: null,
         UseCustomEndpoint: false,
         EndpointURL: "",
-        SearchResultMax: 25,
-        ShowMax: 10,
         FirstRun: true
     };
 }
