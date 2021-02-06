@@ -54,7 +54,7 @@ PreferencesAssistant.prototype.setup = function() {
     //Text fields
     this.controller.setupWidget("txtEndpointURL",
         this.attributes = {
-            hintText: $L("http://your-checkmate-server.com"),
+            hintText: $L("http://your-server.com"),
             multiline: false,
             enterSubmits: false,
             autoReplace: false,

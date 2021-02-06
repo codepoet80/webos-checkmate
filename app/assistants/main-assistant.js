@@ -249,6 +249,7 @@ MainAssistant.prototype.handlePopupChoose = function(task, command) {
             var noteToShow = appModel.LastTaskSelected.notes;
             if (!noteToShow || noteToShow == "")
                 noteToShow = "<i>No notes for this task</i>";
+            noteToShow = noteToShow.replace(/(?:\r\n|\r|\n)/g, '<br>');
             Mojo.Additions.ShowDialogBox("Task Notes", noteToShow);
             break;
         case "do-edit":
@@ -362,8 +363,9 @@ MainAssistant.prototype.showWelcomePrompt = function() {
         onChoose: function(value) {
             if (value == "login") {
                 this.showLogin();
-            } else
-                Mojo.Additions.ShowDialogBox("Not implemented yet", "Visit http://checkmate.webosarchive.com to sign up, then come back here with the credentials you get there");
+            } else if (value == "new") {
+                Mojo.Additions.ShowDialogBox("Not implemented yet", "Visit <a href=\"http://checkmate.webosarchive.com\">http://checkmate.webosarchive.com</a> to sign up, then come back here with the credentials you get from the site to Log In.");
+            }
         },
         title: "Welcome to Check Mate!",
         message: "Your To Do list anywhere! This client app can be used with a web service and web app that lets you manage your to do list from webOS or from virtually any web browser -- from 1997 to 2021. Do you want to Log In to an existing list, or create a new one?",

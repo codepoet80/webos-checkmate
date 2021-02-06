@@ -21,7 +21,7 @@ var AppModel = function() {
         ChessMove: "",
         Grandmaster: "",
         SoundTheme: 1,
-        RefreshTimeout: null,
+        RefreshTimeout: 60000,
         UseCustomEndpoint: false,
         EndpointURL: "",
         FirstRun: true
