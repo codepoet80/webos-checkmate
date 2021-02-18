@@ -182,17 +182,20 @@ MainAssistant.prototype.handleCommand = function(event) {
 }
 
 MainAssistant.prototype.handleListReorder = function(event) {
-    //TODO: Add a delay
-    Mojo.Log.warn("List re-arranged: " + event.item.guid + " was " + event.fromIndex + " now " + event.toIndex);
     var thisTaskList = this.controller.getWidgetSetup("taskList");
-    //Re-sort items array to match UI
-    thisTaskList.model.items = this.moveElementInArray(thisTaskList.model.items, event.fromIndex, event.toIndex);
-    //Re-number sortPos so server can store this order
-    var usePos = 1;
-    for (var i = thisTaskList.model.items.length - 1; i >= 0; i--) {
-        Mojo.Log.info("Renumbering " + thisTaskList.model.items[i].guid + " to " + usePos);
-        thisTaskList.model.items[i].sortPosition = usePos;
-        usePos++;
+
+    var items = thisTaskList.model.items;
+    var newPos = 1;
+    for (var i = items.length - 1; i >= 0; i--) {
+        newPos++;
+    }
+
+    items.move(event.fromIndex, event.toIndex);
+
+    newPos = 1;
+    for (var i = items.length - 1; i >= 0; i--) {
+        items[i].sortPosition = newPos;
+        newPos++;
     }
     //Update Server
     serviceModel.UpdateTask(appModel.AppSettingsCurrent["ChessMove"], appModel.AppSettingsCurrent["Grandmaster"], thisTaskList.model.items, this.handleServerResponse.bind(this));
@@ -457,15 +460,9 @@ MainAssistant.prototype.cleanup = function(event) {
 };
 
 /* Helper Functions */
-
-MainAssistant.prototype.moveElementInArray = function(arrayToShift, fromPos, toPos) {
-    var elementToMove = arrayToShift[fromPos];
-    for (var i = fromPos; i >= toPos; i--) {
-        arrayToShift[i] = arrayToShift[i - 1];
-    }
-    arrayToShift[toPos] = elementToMove;
-    return arrayToShift;
-}
+Array.prototype.move = function(from, to) {
+    this.splice(to, 0, this.splice(from, 1)[0]);
+};
 
 MainAssistant.prototype.checkForGameOver = function() {
     var thisTaskList = this.controller.getWidgetSetup("taskList");
