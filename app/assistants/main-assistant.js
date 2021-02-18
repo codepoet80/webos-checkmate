@@ -182,6 +182,7 @@ MainAssistant.prototype.handleCommand = function(event) {
 }
 
 MainAssistant.prototype.handleListReorder = function(event) {
+    //TODO: Add a delay
     Mojo.Log.warn("List re-arranged: " + event.item.guid + " was " + event.fromIndex + " now " + event.toIndex);
     var thisTaskList = this.controller.getWidgetSetup("taskList");
     //Re-sort items array to match UI
@@ -205,27 +206,33 @@ MainAssistant.prototype.handleListDelete = function(event) {
 }
 
 MainAssistant.prototype.handleListClick = function(event) {
-    Mojo.Log.info("Item tapped: " + event.item.guid);
-    appModel.LastTaskSelected = event.item;
 
-    //Pop up Menu
-    if (event.item.guid != "new") {
-        var posTarget = "divCheck" + event.item.guid;
-        var completeLabel = "Uncomplete";
-        if (!event.item.completed)
-            completeLabel = "Complete";
-        this.controller.popupSubmenu({
-            onChoose: this.handlePopupChoose.bind(this, event.item),
-            placeNear: document.getElementById(posTarget),
-            items: [
-                { label: 'Edit', command: 'do-edit' },
-                { label: 'Show Notes', command: 'do-notes' },
-                { label: completeLabel, command: 'do-complete' }
-            ]
-        });
-        return true;
+    Mojo.Log.info("Item tapped with element class " + event.originalEvent.target.className + ": " + event.item.videoName + ", id: " + event.item.youtubeId + ", selected state: " + event.item.selectedState);
+
+    if (event.originalEvent.target.className.indexOf("checkmark") != -1) { //handle checkmark tap
+        this.handlePopupChoose(event.item, "do-complete");
+    } else { //provide a menu for tap on anything else
+        appModel.LastTaskSelected = event.item;
+
+        if (event.item.guid != "new") {
+            var posTarget = "divCheck" + event.item.guid;
+            var completeLabel = "Uncomplete";
+            if (!event.item.completed)
+                completeLabel = "Complete";
+            this.controller.popupSubmenu({
+                onChoose: this.handlePopupChoose.bind(this, event.item),
+                placeNear: document.getElementById(posTarget),
+                items: [
+                    { label: 'Edit', command: 'do-edit' },
+                    { label: 'Show Notes', command: 'do-notes' },
+                    { label: completeLabel, command: 'do-complete' }
+                ]
+            });
+            return true;
+        }
+        return false;
     }
-    return false;
+
 }
 
 MainAssistant.prototype.handlePopupChoose = function(task, command) {

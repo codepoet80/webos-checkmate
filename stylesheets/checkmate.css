@@ -12,11 +12,14 @@
 
 .checkmark {
     float: right;
-    visibility: hidden;
+    visibility: visible;
+    opacity: 0.1;
     margin-top: 2px;
+    width: 30px;
 }
 
 .checkmark.true {
+    opacity: 1;
     visibility: visible;
 }
 
