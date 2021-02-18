@@ -20,9 +20,10 @@ AppAssistant.prototype.handleLaunch = function(params) {
     Mojo.Log.info("Check mate is Launching! Launch params: " + JSON.stringify(params));
 
     //if there was a search query, load with that
-    if (params && params["query"] != undefined) {
-        appModel.LaunchQuery = decodeURI(params["query"]);
-        Mojo.Log.info("Launch query was: " + appModel.LaunchQuery);
+    Mojo.Log.info("Launch params: " + JSON.stringify(params));
+    if (params && params["newtask"] != undefined) {
+        appModel.LaunchQuery = decodeURI(params["newtask"]);
+        Mojo.Log.info("Launch with new task request: " + appModel.LaunchQuery);
     }
 
     //if the stage already exists then just bring it into focus

@@ -98,9 +98,7 @@ MainAssistant.prototype.activate = function(event) {
     }
     var thisMenuModel = this.controller.getWidgetSetup(Mojo.Menu.appMenu).model;
     thisMenuModel.items[3].label = loggedInLabel;
-    Mojo.Log.info("model changing menu to: " + loggedInLabel);
     this.controller.modelChanged(thisMenuModel);
-    Mojo.Log.info("model changed menu");
 
     //find out what kind of device this is
     if (Mojo.Environment.DeviceInfo.platformVersionMajor >= 3) {
@@ -135,9 +133,11 @@ MainAssistant.prototype.activate = function(event) {
             }
             //handle launch with query
             if (appModel.LaunchQuery && appModel.LaunchQuery != "") {
-                Mojo.Log.info("using launch query: " + appModel.LaunchQuery);
+                appModel.LastTaskSelected = { guid: "new", title: appModel.LaunchQuery };
+                this.showEditDialog();
             }
         } else {
+            appModel.LaunchQuery = "";
             this.showWelcomePrompt();
         }
     }
