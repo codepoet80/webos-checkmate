@@ -374,7 +374,9 @@ MainAssistant.prototype.showWelcomePrompt = function() {
             if (value == "login") {
                 this.showLogin();
             } else if (value == "new") {
-                Mojo.Additions.ShowDialogBox("Not implemented yet", "Visit <a href=\"http://checkmate.webosarchive.com\">http://checkmate.webosarchive.com</a> to sign up, then come back here with the credentials you get from the site to Log In.");
+                Mojo.Log.info("new selected!");
+                var stageController = Mojo.Controller.stageController;
+                stageController.swapScene({ transition: Mojo.Transition.crossFade, name: "newuser" });
             }
         },
         title: "Welcome to Check Mate!",

@@ -29,6 +29,26 @@ ServiceModel.prototype.buildURL = function(actionType) {
     return path;
 }
 
+//HTTP request to get Terms and Conditions
+ServiceModel.prototype.GetTnC = function(callback) {
+    this.retVal = "";
+    if (callback)
+        callback = callback.bind(this);
+
+    var theQuery = this.buildURL("tandc");
+    theQuery = theQuery.replace(".php", ".html");
+    Mojo.Log.info("Getting Terms and Conditions with query: " + theQuery);
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.open("GET", theQuery);
+    xmlhttp.send();
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+            if (callback)
+                callback(xmlhttp.responseText);
+        }
+    }.bind(this);
+}
+
 //HTTP request to get tasks
 ServiceModel.prototype.GetTasks = function(notation, grandmaster, callback) {
     this.retVal = "";
