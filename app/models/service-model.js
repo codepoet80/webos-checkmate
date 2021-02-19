@@ -49,6 +49,25 @@ ServiceModel.prototype.GetTnC = function(callback) {
     }.bind(this);
 }
 
+//HTTP request to get Terms and Conditions
+ServiceModel.prototype.GetNewCredentials = function(callback) {
+    this.retVal = "";
+    if (callback)
+        callback = callback.bind(this);
+
+    var theQuery = this.buildURL("new-user");
+    Mojo.Log.info("Getting new user credentials with query: " + theQuery);
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.open("GET", theQuery);
+    xmlhttp.send();
+    xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+            if (callback)
+                callback(xmlhttp.responseText);
+        }
+    }.bind(this);
+}
+
 //HTTP request to get tasks
 ServiceModel.prototype.GetTasks = function(notation, grandmaster, callback) {
     this.retVal = "";
