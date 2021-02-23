@@ -33,7 +33,8 @@ MainAssistant.prototype.setup = function() {
         itemTemplate: 'main/item-template',
         listTemplate: 'main/list-template',
         swipeToDelete: true,
-        reorderable: true
+        reorderable: true,
+        addItemaddItemLabel: "New Task"
     };
     this.controller.setupWidget("taskList", this.template, this.taskInfoModel);
     //Menu
@@ -73,6 +74,7 @@ MainAssistant.prototype.setup = function() {
     Mojo.Event.listen(this.controller.get("taskList"), Mojo.Event.listReorder, this.handleListReorder.bind(this));
     Mojo.Event.listen(this.controller.get("taskList"), Mojo.Event.listDelete, this.handleListDelete.bind(this));
     Mojo.Event.listen(this.controller.get("taskList"), Mojo.Event.listTap, this.handleListClick.bind(this));
+    Mojo.Event.listen(this.controller.get("taskList"), Mojo.Event.listAdd, this.handleListAdd.bind(this));
 
     //Check for updates
     if (!appModel.UpdateCheckDone) {
@@ -236,6 +238,12 @@ MainAssistant.prototype.handleListClick = function(event) {
         return false;
     }
 
+}
+
+MainAssistant.prototype.handleListAdd = function(event) {
+    //TODO: Verify this works
+    appModel.LastTaskSelected = { guid: "new" };
+    this.showEditDialog();
 }
 
 MainAssistant.prototype.handlePopupChoose = function(task, command) {
