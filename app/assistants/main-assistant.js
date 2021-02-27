@@ -34,7 +34,7 @@ MainAssistant.prototype.setup = function() {
         listTemplate: 'main/list-template',
         swipeToDelete: true,
         reorderable: true,
-        addItemaddItemLabel: "New Task"
+        addItemLabel: "New Task"
     };
     this.controller.setupWidget("taskList", this.template, this.taskInfoModel);
     //Menu
