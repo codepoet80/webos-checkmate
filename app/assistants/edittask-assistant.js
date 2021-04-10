@@ -67,10 +67,10 @@ EditTaskAssistant.prototype.activate = function(event) {
     this.taskNotes = appModel.LastTaskSelected.notes;
     if (appModel.LastTaskSelected.guid == "new") {
         $("divEditTitle").innerHTML = "New Task";
+
     } else {
         $("divEditTitle").innerHTML = "Edit Task";
     }
-
 
     /* add event handlers to listen to events from widgets */
     Mojo.Event.listen(this.sceneAssistant.controller.get("txtTaskTitle"), Mojo.Event.propertyChange, this.handleValueChange.bind(this));

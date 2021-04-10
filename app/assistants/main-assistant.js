@@ -75,6 +75,9 @@ MainAssistant.prototype.setup = function() {
     Mojo.Event.listen(this.controller.get("taskList"), Mojo.Event.listDelete, this.handleListDelete.bind(this));
     Mojo.Event.listen(this.controller.get("taskList"), Mojo.Event.listTap, this.handleListClick.bind(this));
     Mojo.Event.listen(this.controller.get("taskList"), Mojo.Event.listAdd, this.handleListAdd.bind(this));
+    //Just type
+    this.keypressHandler = this.handleKeyPress.bindAsEventListener(this);
+    this.controller.document.addEventListener("keypress", this.keypressHandler, true);
 
     //Check for updates
     if (!appModel.UpdateCheckDone) {
@@ -155,6 +158,15 @@ MainAssistant.prototype.handleUpdateResponse = function(responseObj) {
 }
 
 /* UI Event Handlers */
+
+//Handles the enter key
+MainAssistant.prototype.handleKeyPress = function(event) {
+    if (!event.shiftKey && !this.DoingEdit) {
+        Mojo.Log.info("Key pressed!" + String.fromCharCode(event.keyCode));
+        appModel.LastTaskSelected = { guid: "new" };
+        this.showEditDialog();
+    }
+};
 
 MainAssistant.prototype.handleCommand = function(event) {
     if (event.type == Mojo.Event.command) {
@@ -300,13 +312,15 @@ MainAssistant.prototype.updateTaskListWidget = function(notation, results) {
 
 /* Edit Task Dialog Stuff */
 MainAssistant.prototype.showEditDialog = function(taskId) {
+    this.DoingEdit = true;
     var stageController = Mojo.Controller.getAppController().getActiveStageController();
     if (stageController) {
         this.controller = stageController.activeScene();
         this.controller.showDialog({
             template: 'edittask/edittask-scene',
             assistant: new EditTaskAssistant(this, function(val) {
-                    Mojo.Log.error("got value from edit task dialog: " + JSON.stringify(val));
+                    Mojo.Log.info("got value from edit task dialog: " + JSON.stringify(val));
+                    this.DoingEdit = false;
                     this.handleEditDialogDone(val);
                 }.bind(this)) //since this will be a dialog, not a scene, it must be defined in sources.json without a 'scenes' member
         });
