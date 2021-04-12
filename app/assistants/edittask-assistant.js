@@ -11,7 +11,6 @@ function EditTaskAssistant(sceneAssistant, doneCallBack) {
 EditTaskAssistant.prototype.setup = function(widget) {
     /* this function is for setup tasks that have to happen when the scene is first created */
     this.widget = widget;
-    Mojo.Log.info("EditTask assistant setup");
     Mojo.Log.info("Current Move is: " + appModel.AppSettingsCurrent["ChessMove"]);
 
     /* setup widgets here */

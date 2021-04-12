@@ -230,21 +230,28 @@ MainAssistant.prototype.handleListClick = function(event) {
         this.handlePopupChoose(event.item, "do-complete");
     } else { //provide a menu for tap on anything else
         appModel.LastTaskSelected = event.item;
-
         if (event.item.guid != "new") {
             var posTarget = "divCheck" + event.item.guid;
+
+            var itemsToShow = [
+                { label: 'Edit', command: 'do-edit' }
+            ]
+            var currNote = appModel.LastTaskSelected.notes;
+            if (currNote && currNote != "") {
+                itemsToShow.push({ label: 'Show Note', command: 'do-notes' });
+                itemsToShow.push({ label: 'Copy Note', command: 'do-copynotes' })
+            }
             var completeLabel = "Uncomplete";
             if (!event.item.completed)
                 completeLabel = "Complete";
+            itemsToShow.push({ label: completeLabel, command: 'do-complete' });
+
             this.controller.popupSubmenu({
                 onChoose: this.handlePopupChoose.bind(this, event.item),
                 placeNear: document.getElementById(posTarget),
-                items: [
-                    { label: 'Edit', command: 'do-edit' },
-                    { label: 'Show Notes', command: 'do-notes' },
-                    { label: completeLabel, command: 'do-complete' }
-                ]
+                items: itemsToShow
             });
+
             return true;
         }
         return false;
@@ -282,6 +289,15 @@ MainAssistant.prototype.handlePopupChoose = function(task, command) {
             noteToShow = noteToShow.replace(/(?:\r\n|\r|\n)/g, '<br>');
             Mojo.Additions.ShowDialogBox("Task Notes", noteToShow);
             break;
+        case "do-copynotes":
+            var noteToCopy = appModel.LastTaskSelected.notes;
+            if (!noteToCopy || noteToCopy == "")
+                Mojo.Controller.getAppController().showBanner("No note to copy!", { source: 'notification' });
+            noteToCopy = noteToCopy.replace(/(?:\r\n|\r|\n)/g, '<br>');
+            var stageController = Mojo.Controller.getAppController().getActiveStageController();
+            stageController.setClipboard(noteToCopy);
+            Mojo.Controller.getAppController().showBanner("Note copied", { source: 'notification' });
+            break;
         case "do-edit":
             this.showEditDialog(task.guid);
             break;
@@ -318,6 +334,7 @@ MainAssistant.prototype.showEditDialog = function(taskId) {
         this.controller = stageController.activeScene();
         this.controller.showDialog({
             template: 'edittask/edittask-scene',
+            preventCancel: true,
             assistant: new EditTaskAssistant(this, function(val) {
                     Mojo.Log.info("got value from edit task dialog: " + JSON.stringify(val));
                     this.DoingEdit = false;
