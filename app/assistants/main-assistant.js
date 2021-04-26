@@ -44,8 +44,8 @@ MainAssistant.prototype.setup = function() {
         items: [
             Mojo.Menu.editItem,
             { label: "Preferences", command: 'do-Preferences' },
-            { label: "About", command: 'do-myAbout' },
             { label: "Log In", command: 'do-LogInOut' },
+            { label: "About", command: 'do-myAbout' }
         ]
     };
     this.controller.setupWidget(Mojo.Menu.appMenu, this.appMenuAttributes, this.appMenuModel);
@@ -102,7 +102,7 @@ MainAssistant.prototype.activate = function(event) {
         this.controller.modelChanged(thisCommandModel);
     }
     var thisMenuModel = this.controller.getWidgetSetup(Mojo.Menu.appMenu).model;
-    thisMenuModel.items[3].label = loggedInLabel;
+    thisMenuModel.items[2].label = loggedInLabel;
     this.controller.modelChanged(thisMenuModel);
 
     //find out what kind of device this is
@@ -161,10 +161,12 @@ MainAssistant.prototype.handleUpdateResponse = function(responseObj) {
 
 //Handles the enter key
 MainAssistant.prototype.handleKeyPress = function(event) {
-    if (!event.shiftKey && !this.DoingEdit) {
-        Mojo.Log.info("Key pressed!" + String.fromCharCode(event.keyCode));
-        appModel.LastTaskSelected = { guid: "new" };
-        this.showEditDialog();
+    if (event.srcElement.toString().indexOf("HTMLInputElement") == -1) {
+        if (!event.shiftKey && !this.DoingEdit) {
+            Mojo.Log.info("Key pressed!" + String.fromCharCode(event.keyCode));
+            appModel.LastTaskSelected = { guid: "new" };
+            this.showEditDialog();
+        }
     }
 };
 
@@ -442,7 +444,7 @@ MainAssistant.prototype.doLogInOut = function() {
         appModel.AppSettingsCurrent["Grandmaster"] = "";
         appModel.SaveSettings();
         //Update menu label
-        this.appMenuModel.items[3].label = "Log In";
+        this.appMenuModel.items[2].label = "Log In";
         this.controller.modelChanged(this.appMenuModel);
         //Hide Command Menu
         var thisWidgetModel = this.controller.getWidgetSetup(Mojo.Menu.commandMenu).model;
@@ -471,7 +473,7 @@ MainAssistant.prototype.handleLoginDialogDone = function(val) {
     if (val) {
         Mojo.Log.info("Loading tasks after successful login!");
         //Update menu label
-        this.appMenuModel.items[3].label = "Log Out";
+        this.appMenuModel.items[2].label = "Log Out";
         this.controller.modelChanged(this.appMenuModel);
         //Show command menu
         var thisWidgetModel = this.controller.getWidgetSetup(Mojo.Menu.commandMenu).model;

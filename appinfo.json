@@ -1,6 +1,6 @@
 {
     "id": "com.jonandnic.checkmate",
-    "version": "1.2.2",
+    "version": "1.2.3",
     "vendor": "Jon Wise",
     "type": "web",
     "main": "index.html",
