@@ -1,6 +1,7 @@
 /*
     Check Mate to do list app for webOS.
-    This app depends a Check Mate service, which is by webOS Archive at no cost for what remains of the webOS mobile community.
+    This app depends on a Check Mate web service, which is hosted by webOS Archive at no charge for what remains of the webOS mobile community.
+    You can also host the service yourself: http://www.github.com/codepoet80/checkmate-service
 */
 
 function MainAssistant() {
@@ -258,7 +259,6 @@ MainAssistant.prototype.handleListClick = function(event) {
         }
         return false;
     }
-
 }
 
 MainAssistant.prototype.handleListAdd = function(event) {
