@@ -48,14 +48,6 @@ EditTaskAssistant.prototype.setup = function(widget) {
             disabled: false
         }
     );
-    this.sceneAssistant.controller.setupWidget("linkSpinner",
-        this.attributes = {
-            spinnerSize: "small"
-        },
-        this.model = {
-            spinning: true
-        }
-    );
     this.sceneAssistant.controller.setupWidget("goButton", { type: Mojo.Widget.activityButton }, { label: "OK", disabled: false });
     this.sceneAssistant.controller.setupWidget("cancelButton", { type: Mojo.Widget.button }, { label: "Cancel", disabled: false });
 };
