@@ -1,5 +1,7 @@
 # Check Mate app for webOS
 
+![App Icon](icon.png)
+
 Check Mate To Do list client for legacy Palm/HP webOS devices, depends on back-end service listed below.
 
 Tested on Pre, Pre2, Veer and Touchpad.
