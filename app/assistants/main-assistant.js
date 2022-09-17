@@ -13,6 +13,11 @@ function MainAssistant() {
 
 MainAssistant.prototype.setup = function() {
 
+    //Default to light theme
+    if (Object.keys(appModel.AppSettingsCurrent).indexOf('ThemePreference') == -1)
+        appModel.AppSettingsCurrent["ThemePreference"] = "palm-default";
+    appModel.SetThemePreference(this.controller);
+
     //Loading spinner - with global members for easy toggling later
     this.spinnerAttrs = {
         spinnerSize: Mojo.Widget.spinnerLarge
@@ -53,7 +58,7 @@ MainAssistant.prototype.setup = function() {
     //Command Buttons
     this.cmdMenuAttributes = {
             spacerHeight: 40,
-            //menuClass: 'no-fade'
+            menuClass: 'no-fade'
         },
         this.cmdMenuModel = {
             visible: false,
@@ -182,7 +187,7 @@ MainAssistant.prototype.handleCommand = function(event) {
                 stageController.pushScene({ name: "preferences", disableSceneScroller: false });
                 break;
             case 'do-myAbout':
-                Mojo.Additions.ShowDialogBox("Check Mate - " + Mojo.Controller.appInfo.version, "Check Mate app for webOS. Copyright 2021, Jon Wise. Distributed under an MIT License.<br>Source code available at: https://github.com/codepoet80/webos-checkmate");
+                Mojo.Additions.ShowDialogBox("Check Mate - " + Mojo.Controller.appInfo.version, "Check Mate app for webOS. Copyright 2022, Jon W. Distributed under an MIT License.<br>Source code available at: https://github.com/codepoet80/webos-checkmate");
                 break;
             case 'do-sweep':
                 this.confirmSweep();

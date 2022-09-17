@@ -2,13 +2,13 @@
 Check Mate Service Model - Mojo
  Version 1.0
  Created: 2021
- Author: Jonathan Wise
+ Author: Jon W
  License: MIT
  Description: A model to interact with Check Mate web service within a Mojo app.
 */
 
 var ServiceModel = function() {
-    this.urlBase = "http://checkmate.webosarchive.com";
+    this.urlBase = "http://checkmate.cloud";
 };
 
 //Properties

@@ -1,14 +1,13 @@
 {
     "id": "com.jonandnic.checkmate",
-    "version": "1.2.3",
-    "vendor": "Jon Wise",
+    "version": "1.2.5",
+    "vendor": "Jon W",
     "type": "web",
     "main": "index.html",
     "title": "Check Mate",
     "icon": "icon.png",
     "splashicon": "icon-256.png",
     "uiRevision": "2",
-    "theme": "light",
     "universalSearch": {
         "action": {
             "displayName": "New Task",

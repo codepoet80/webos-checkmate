@@ -5,6 +5,10 @@
     background-size: 32px 32px;
 }
 
+.palm-dark .header-text {
+    color:lightgray !important;
+}
+
 .task-title.new {
     color: dimgray;
     font-style: italic;
@@ -32,6 +36,10 @@
     padding: 14px;
     font-size: 14px;
     color: #000;
+}
+
+.palm-dark .explanation-text {
+    color: lightgray;
 }
 
 .palm-group-title.detail {

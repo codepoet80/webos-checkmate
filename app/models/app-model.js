@@ -2,7 +2,7 @@
 App Model
  Version 0.4
  Created: 2018
- Author: Jonathan Wise
+ Author: Jon W
  License: MIT
  Description: Common functions for webOS apps, particularly for managing persisted options in cookies
 */
@@ -18,6 +18,7 @@ var AppModel = function() {
     //Define your app preferences (to be saved by OS)
     this.AppSettingsCurrent = null;
     this.AppSettingsDefaults = {
+        ThemePreference: "palm-default",
         ChessMove: "",
         Grandmaster: "",
         SoundTheme: 1,
@@ -26,6 +27,21 @@ var AppModel = function() {
         EndpointURL: "",
         FirstRun: true
     };
+}
+
+AppModel.prototype.SetThemePreference = function(theController) {
+    if (appModel.AppSettingsCurrent["ThemePreference"] != "system-theme") {
+        theController.document.body.className = appModel.AppSettingsCurrent["ThemePreference"];
+        document.body.className = appModel.AppSettingsCurrent["ThemePreference"];
+        Mojo.Log.info("Using local theme pref: " + appModel.AppSettingsCurrent["ThemePreference"]);
+    } else {
+        systemModel.LoadWOSAPrefs(function(response) {
+            if (response) {
+                Mojo.Log.info("Using system theme pref: " + systemModel.WOSAPrefs.theme);
+                theController.document.body.className = systemModel.WOSAPrefs.theme;
+            }
+        }.bind(this))
+    }
 }
 
 //You probably don't need to change the below functions since they all work against the Cookie defaults you defined above.
