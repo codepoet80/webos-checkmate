@@ -8,7 +8,7 @@ Check Mate Service Model - Mojo
 */
 
 var ServiceModel = function() {
-    this.urlBase = "http://checkmate.cloud";
+    this.urlBase = "http://checkmate.wosa.link";
 };
 
 //Properties

@@ -6,7 +6,7 @@ Check Mate To Do list client for legacy Palm/HP webOS devices, depends on back-e
 
 Tested on Pre, Pre2, Veer and Touchpad.
 
-Uses [Check Mate Service](https://github.com/codepoet80/checkmate-service) which is hosted at [checkmate.cloud](http://checkmate.cloud) for the retro device community without guarantee of privacy or performance. Illegal or illicit use strictly prohibited. 
+Uses [Check Mate Service](https://github.com/codepoet80/checkmate-service) which is hosted at [checkmate.wosa.link](http://checkmate.wosa.link) for the retro device community without guarantee of privacy or performance. Illegal or illicit use strictly prohibited. 
 
 You can also self-host the services, see the [instructions here](https://github.com/codepoet80/checkmate-service/blob/main/README.md).
 
